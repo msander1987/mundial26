@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Stickers - Mundial 2026</title>
+    <style>
+        :root {
+            --primary: #0d3776;
+            --secondary: #f7f7f7ce;
+            --accent: #25975a;
+            --dark: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary);
+            margin: 0;
+            padding-bottom: 50px;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        h2 { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
+
+        /* Grid de Stickers */
+        .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .sticker {
+            aspect-ratio: 1/1;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .sticker.owned {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Modal */
+        #modal-login {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .hidden { display: none !important; }
+
+        
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 id="welcome-msg">Mi Álbum 2026</h1>
+</header>
+
+<div class="container">
+    <div class="stats">
+        Progreso: <span id="count">0</span> / <span id="total">0</span> stickers
+    </div>
+    
+    <div id="album-container">
+        
+    </div>
+</div>
+
+
+<div id="modal-login" class="hidden">
+    <div class="modal-content">
+        <h3>¡Bienvenido!</h3>
+        <p>Ingresa tu nombre para comenzar:</p>
+        <input type="text" id="username-input" placeholder="Tu nombre...">
+        <button onclick="saveUser()">Empezar álbum</button>
+    </div>
+</div>
+
+<script>
+    
+    const albumData = [
+        { name: "FIFA", prefix: "FWC", count: 19},
+        { name: "México", prefix: "MEX", count: 20 },
+        { name: "Sudafrica", prefix: "RSA", count: 20 },
+        { name: "Corea", prefix: "KOR", count: 20 },
+        { name: "Republica Checa", prefix: "CZE", count: 20 },
+        { name: "Canada", prefix: "CAN", count: 20 },
+        { name: "Bosnia y Herzegovina", prefix: "BYH", count: 20 },
+        { name: "Qatar", prefix: "QAT", count: 20 },
+        { name: "Suiza", prefix: "SUI", count: 20 },
+        { name: "Brasil", prefix: "BRA", count: 20 },
+        { name: "Marruecos", prefix: "MAR", count: 20 },
+        { name: "Haiti", prefix: "HAI", count: 20 },
+        { name: "Escocia", prefix: "SCO", count: 20 },
+        { name: "Estados Unidos", prefix: "USA", count: 20 },
+        { name: "Paraguay", prefix: "PAR", count: 20 },
+        { name: "Australia", prefix: "AUS", count: 20 },
+        { name: "Turquia", prefix: "TUR", count: 20 },
+        { name: "Alemania", prefix: "GER", count: 20 },
+        { name: "Curazao", prefix: "CUW", count: 20 },
+        { name: "Costa de Marfil", prefix: "CIV", count: 20 },
+        { name: "Ecuador", prefix: "ECU", count: 20 },
+        { name: "Holanda", prefix: "NED", count: 20 },
+        { name: "Japon", prefix: "JPN", count: 20 },
+        { name: "Suecia", prefix: "SWE", count: 20 },
+        { name: "Tunez", prefix: "TUN", count: 20 },
+        { name: "Belgica", prefix: "BEL", count: 20 },
+        { name: "Egipto", prefix: "EGY", count: 20 },
+        { name: "Iran", prefix: "IRN", count: 20 },
+        { name: "Nueva Zelanda", prefix: "NZL", count: 20 },
+        { name: "España", prefix: "ESP", count: 20 },
+        { name: "Cabo Verde", prefix: "CPV", count: 20 },
+        { name: "Arabia Saudita", prefix: "KSA", count: 20 },
+        { name: "Francia", prefix: "FRA", count: 20 },
+        { name: "Senegal", prefix: "SEN", count: 20 },
+        { name: "Irak", prefix: "IRQ", count: 20 },
+        { name: "Noruega", prefix: "NOR", count: 20 },
+        { name: "Argentina", prefix: "ARG", count: 20 },
+        { name: "Argelia", prefix: "ALG", count: 20 },
+        { name: "Austria", prefix: "AUT", count: 20 },
+        { name: "Jordania", prefix: "JOR", count: 20 },
+        { name: "Portugal", prefix: "POR", count: 20 },
+        { name: "Congo", prefix: "COD", count: 20 },
+        { name: "Usbekistan", prefix: "UZB", count: 20 },
+        { name: "Colombia", prefix: "COL", count: 20 },
+        { name: "Inglaterra", prefix: "ENG", count: 20 },
+        { name: "Croacia", prefix: "CRO", count: 20 },
+        { name: "Ghana", prefix: "GHA", count: 20 },
+        { name: "Panama", prefix: "PAN", count: 20 },
+        { name: "Coca Cola", prefix: "CC", count: 14 }
+
+    ];
+
+    let userData = {
+        name: "",
+        ownedStickers: []
+    };
+
+    // Inicialización
+    window.onload = () => {
+        const saved = localStorage.getItem('worldCup2026');
+        if (saved) {
+            userData = JSON.parse(saved);
+            document.getElementById('welcome-msg').innerText = `Álbum de ${userData.name}`;
+            renderAlbum();
+        } else {
+            document.getElementById('modal-login').classList.remove('hidden');
+        }
+    };
+
+    function saveUser() {
+        const nameInput = document.getElementById('username-input').value;
+        if (nameInput.trim() !== "") {
+            userData.name = nameInput;
+            localStorage.setItem('worldCup2026', JSON.stringify(userData));
+            document.getElementById('modal-login').classList.add('hidden');
+            document.getElementById('welcome-msg').innerText = `Álbum de ${userData.name}`;
+            renderAlbum();
+        }
+    }
+
+    function renderAlbum() {
+        const container = document.getElementById('album-container');
+        container.innerHTML = '';
+        let totalStickers = 0;
+
+        albumData.forEach(section => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.innerHTML = `<h2>${section.name}</h2>`;
+            
+            const grid = document.createElement('div');
+            grid.className = 'sticker-grid';
+
+            for (let i = 1; i <= section.count; i++) {
+                totalStickers++;
+                const stickerId = `${section.prefix}-${i}`;
+                const stickerDiv = document.createElement('div');
+                
+                stickerDiv.className = `sticker ${userData.ownedStickers.includes(stickerId) ? 'owned' : ''}`;
+                stickerDiv.innerText = i;
+                stickerDiv.onclick = () => toggleSticker(stickerId, stickerDiv);
+                
+                grid.appendChild(stickerDiv);
+            }
+            
+            sectionDiv.appendChild(grid);
+            container.appendChild(sectionDiv);
+        });
+
+        document.getElementById('total').innerText = totalStickers;
+        updateCounter();
+    }
+
+    function toggleSticker(id, element) {
+        const index = userData.ownedStickers.indexOf(id);
+        if (index > -1) {
+            userData.ownedStickers.splice(index, 1);
+            element.classList.remove('owned');
+        } else {
+            userData.ownedStickers.push(id);
+            element.classList.add('owned');
+        }
+        localStorage.setItem('worldCup2026', JSON.stringify(userData));
+        updateCounter();
+    }
+
+    function updateCounter() {
+        document.getElementById('count').innerText = userData.ownedStickers.length;
+    }
+</script>
+
+</body>
+</html>
